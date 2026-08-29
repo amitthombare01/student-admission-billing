@@ -1,0 +1,26 @@
+{
+  "name": "student-admission-billing-system",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Online student admission and billing system",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "exceljs": "4.4.0",
+    "nodemailer": "^9.0.5",
+    "pg": "^8.23.0"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.14"
+  }
+}

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Admission Billing System</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Online student admission and billing system for schools.">
+    <link rel="icon" type="image/png" href="school-icon.png">
+    <link rel="apple-touch-icon" href="school-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css?v=20260823-staff-accounts">
+</head>
+<body>
+    <div class="page-orb orb-one"></div>
+    <div class="page-orb orb-two"></div>
+    <div class="page-grid"></div>
+
+    <section class="login-shell" id="loginShell">
+        <div class="login-card">
+            <div class="hero-badge">Secure access</div>
+            <h1>School Admission Portal</h1>
+            <p>Use the staff user ID and password issued by your administrator.</p>
+
+            <form id="loginForm" class="login-form auth-form">
+                <div class="form-group">
+                    <label for="loginUsername">User ID</label>
+                    <input type="text" id="loginUsername" autocomplete="username" placeholder="Enter your staff user ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <p class="login-note">Admin can also log in here, or use the separate <a href="admin.html">admin page</a>.</p>
+                <p class="login-success" id="loginSuccess" style="display: none;"></p>
+                <p class="login-error" id="loginError" style="display: none;"></p>
+            </form>
+
+        </div>
+    </section>
+
+    <div class="app-shell" id="appShell" style="display: none;">
+        <div class="container">
+            <header>
+                <div class="hero-badge">Admission workspace</div>
+                <h1>Student Admission Billing System</h1>
+                <p>Create polished admission records and bill copies with a cleaner, print-ready workflow.</p>
+                <div class="offline-banner" id="offlineBanner">Connected to the cloud school database.</div>
+
+                <div class="topbar-meta">
+                    <div class="user-pill">
+                        <span id="userFullName">User</span>
+                        <small id="userRole">Staff</small>
+                    </div>
+                    <button class="btn btn-secondary btn-compact" id="adminPanelBtn" onclick="window.location.href='admin.html'" style="display: none;">Admin Panel</button>
+                    <button class="btn btn-secondary btn-compact" onclick="logout()">Logout</button>
+                </div>
+
+                <div class="nav-tabs">
+                    <button class="nav-btn active" onclick="showSection('dashboardSection', this)">Dashboard</button>
+                    <button class="nav-btn" onclick="showSection('formSection', this)">New Admission</button>
+                    <button class="nav-btn" onclick="showSection('recordsSection', this)">View Records</button>
+                    <button class="nav-btn" onclick="showSection('passwordSection', this)">Change Password</button>
+                </div>
+            </header>
+
+            <main>
+                <div class="dashboard-section" id="dashboardSection">
+                    <div class="section-heading">
+                        <span class="section-kicker">Overview</span>
+                        <h2>School Dashboard</h2>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <span class="dashboard-label">Total Students</span>
+                            <strong class="dashboard-value" id="totalStudentsCard">0</strong>
+                        </div>
+                        <div class="dashboard-card">
+                            <span class="dashboard-label">Total Classes</span>
+                            <strong class="dashboard-value" id="totalClassesCard">0</strong>
+                        </div>
+                        <div class="dashboard-card">
+                            <span class="dashboard-label">Session Fee Total</span>
+                            <strong class="dashboard-value" id="totalFeesCard">Rs 0.00</strong>
+                        </div>
+                        <div class="dashboard-card">
+                            <span class="dashboard-label">Today's Admissions</span>
+                            <strong class="dashboard-value" id="todayAdmissionsCard">0</strong>
+                        </div>
+                        <div class="dashboard-card">
+                            <span class="dashboard-label">Fee Collected</span>
+                            <strong class="dashboard-value" id="monthlyFeesCard">Rs 0.00</strong>
+                        </div>
+                        <div class="dashboard-card">
+                            <span class="dashboard-label">Fee Balance</span>
+                            <strong class="dashboard-value" id="pendingFeesCard">Rs 0.00</strong>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-panels">
+                        <div class="dashboard-panel">
+                            <h3>Quick Actions</h3>
+                            <div class="dashboard-actions">
+                                <button class="btn btn-primary" onclick="showSection('formSection', document.querySelectorAll('.nav-btn')[1])">Add New Admission</button>
+                                <button class="btn btn-secondary" onclick="showSection('recordsSection', document.querySelectorAll('.nav-btn')[2])">Open Records</button>
+                            </div>
+                        </div>
+                        <div class="dashboard-panel">
+                            <h3>Recent Admissions</h3>
+                            <div id="recentAdmissionsList" class="recent-admissions-list">
+                                <p class="empty-state">No admissions yet.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-panels dashboard-panels-secondary">
+                        <div class="dashboard-panel">
+                            <h3>Class-wise Fee Summary</h3>
+                            <div id="classStrengthList" class="class-strength-list">
+                                <p class="empty-state">No class data yet.</p>
+                            </div>
+                        </div>
+                        <div class="dashboard-panel">
+                            <h3>Monthly Collection Summary</h3>
+                            <div id="monthlySummaryList" class="monthly-summary-list">
+                                <p class="empty-state">No monthly data yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section" id="formSection" style="display: none;">
+                    <div class="section-heading">
+                        <span class="section-kicker">Registration</span>
+                        <h2>Student Information</h2>
+                    </div>
+
+                    <form id="studentForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="studentName">Student Name / Middle / Surname *</label>
+                                <input type="text" id="studentName" placeholder="Name / Middle / Surname" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="className">Class/Grade *</label>
+                                <select id="className" required>
+                                    <option value="">Select Class</option>
+                                    <option value="Nursery">Nursery</option>
+                                    <option value="KG">KG</option>
+                                    <option value="1">Class 1</option>
+                                    <option value="2">Class 2</option>
+                                    <option value="3">Class 3</option>
+                                    <option value="4">Class 4</option>
+                                    <option value="5">Class 5</option>
+                                    <option value="6">Class 6</option>
+                                    <option value="7">Class 7</option>
+                                    <option value="8">Class 8</option>
+                                    <option value="9">Class 9</option>
+                                    <option value="10">Class 10</option>
+                                    <option value="11">Class 11</option>
+                                    <option value="12">Class 12</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="parentName">Parent/Guardian Name / Middle / Surname *</label>
+                                <input type="text" id="parentName" placeholder="Name / Middle / Surname" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="contactNumber">Contact Number *</label>
+                                <input type="tel" id="contactNumber" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dateOfBirth">Date of Birth (dd/mm/yyyy)</label>
+                                <div class="date-input-wrap">
+                                    <input type="text" id="dateOfBirth" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10">
+                                    <input type="date" id="dateOfBirthPicker" class="date-picker-proxy" tabindex="-1" aria-hidden="true">
+                                    <button type="button" class="date-picker-btn" id="dateOfBirthPickerBtn" aria-label="Open date of birth calendar">&#128197;</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <textarea id="address" rows="3" placeholder="Enter complete address"></textarea>
+                        </div>
+
+                        <div class="section-heading fee-heading">
+                            <span class="section-kicker">Billing</span>
+                            <h2>Fee Details</h2>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tuitionFee">Total Fees (Rs) *</label>
+                                <input type="number" id="tuitionFee" step="0.01" placeholder="0.00" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="transportFee">Transport Fee (Rs)</label>
+                                <input type="number" id="transportFee" step="0.01" placeholder="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sportsFee">Sports Fee (Rs)</label>
+                                <input type="number" id="sportsFee" step="0.01" placeholder="0.00" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="otherFee">Other Fees (Rs)</label>
+                                <input type="number" id="otherFee" step="0.01" placeholder="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="paymentMode">Payment Mode *</label>
+                                <select id="paymentMode" required>
+                                    <option value="cash">Cash</option>
+                                    <option value="online">Online</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="amountPaid">Fee Paid (Rs) *</label>
+                                <input type="number" id="amountPaid" step="0.01" placeholder="0.00" min="0" required>
+                                <small class="field-note">Enter the amount already paid. Remaining balance will be shown in records and bill.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sessionYear">Session Year *</label>
+                                <input type="text" id="sessionYear" placeholder="e.g., 2024-2025" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="admissionDate">Admission Date (dd/mm/yyyy) *</label>
+                                <div class="date-input-wrap">
+                                    <input type="text" id="admissionDate" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" required>
+                                    <input type="date" id="admissionDatePicker" class="date-picker-proxy" tabindex="-1" aria-hidden="true">
+                                    <button type="button" class="date-picker-btn" id="admissionDatePickerBtn" aria-label="Open admission date calendar">&#128197;</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <button type="reset" class="btn btn-secondary">Clear Form</button>
+                            <button type="submit" class="btn btn-primary">Generate Bill</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="form-section" id="passwordSection" style="display: none;">
+                    <div class="section-heading">
+                        <span class="section-kicker">Account</span>
+                        <h2>Change Password</h2>
+                    </div>
+                    <form id="passwordChangeForm" class="login-form auth-form">
+                        <div class="form-group">
+                            <label for="currentPassword">Current password</label>
+                            <input id="currentPassword" type="password" autocomplete="current-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New password</label>
+                            <input id="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="200" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmNewPassword">Confirm new password</label>
+                            <input id="confirmNewPassword" type="password" autocomplete="new-password" minlength="8" maxlength="200" required>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Save New Password</button>
+                        <p class="login-success" id="passwordChangeSuccess" style="display: none;"></p>
+                        <p class="login-error" id="passwordChangeError" style="display: none;"></p>
+                    </form>
+                </div>
+            </main>
+
+            <div id="recordsSection" style="display: none;">
+                <div class="records-section">
+                    <div class="section-heading">
+                        <span class="section-kicker">Database</span>
+                        <h2>Student Records</h2>
+                    </div>
+
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search by student name or parent name..." onkeyup="filterRecords()">
+                    </div>
+
+                    <div class="records-toolbar">
+                        <span class="storage-note">Records are stored in the shared server database. Administrators can download JSON backups from the admin panel.</span>
+                    </div>
+
+                    <div id="recordsTableContainer" style="overflow-x: auto;">
+                        <table class="records-table" id="recordsTable">
+                            <thead>
+                                <tr>
+                                    <th>School Name</th>
+                                    <th>Student Name</th>
+                                    <th>Class</th>
+                                <th>Parent Name</th>
+                                <th>Session Year</th>
+                                <th>Total Fee</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Payment Mode</th>
+                                <th>Date Added</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="recordsBody">
+                                <tr><td colspan="11" style="text-align: center; color: #7c8199;">No records found</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="records-actions">
+                        <button class="btn btn-secondary" onclick="showSection('dashboardSection', document.querySelectorAll('.nav-btn')[0])">Back to Dashboard</button>
+                        <button class="btn btn-secondary" onclick="showSection('formSection', document.querySelectorAll('.nav-btn')[1])">New Admission</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="billsContainer" style="display: none;">
+            <div class="bills-wrapper">
+                <div class="bill-section">
+                    <h3 class="bill-panel-title">School Copy</h3>
+                    <div id="schoolBill" class="bill"></div>
+                </div>
+
+                <div class="bill-section">
+                    <h3 class="bill-panel-title">Student Copy</h3>
+                    <div id="studentBill" class="bill"></div>
+                </div>
+            </div>
+
+            <div class="bills-footer-actions">
+                <button class="btn btn-primary" onclick="printBills()">Print Both Copies</button>
+                <button class="btn btn-secondary" onclick="goBackFromBills()">Back to Records</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; Student Admission System. Records are stored in the shared school database.</p>
+        </footer>
+    </div>
+
+    <script src="script.js?v=20260822-cloud2"></script>
+</body>
+</html>

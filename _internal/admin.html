@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Student Admission Billing System</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" type="image/png" href="school-icon.png">
+    <link rel="apple-touch-icon" href="school-icon.png">
+    <link rel="stylesheet" href="style.css?v=20260823-admin-layout">
+</head>
+<body>
+    <div class="page-orb orb-one"></div>
+    <div class="page-orb orb-two"></div>
+    <div class="page-grid"></div>
+
+    <section class="login-shell" id="adminLoginShell">
+        <div class="login-card">
+            <div class="hero-badge">Admin access</div>
+            <h1>School Admin Panel</h1>
+            <p>Approve staff requests and manage the school securely from any phone or computer.</p>
+            <form id="adminLoginForm" class="login-form">
+                <div class="form-group">
+                    <label for="adminUsername">Email Address</label>
+                    <input type="email" id="adminUsername" autocomplete="username" placeholder="Enter admin email address" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login as Admin</button>
+                <p class="login-note"><a href="index.html">Back to user portal</a></p>
+                <p class="login-error" id="adminLoginError" style="display: none;"></p>
+            </form>
+        </div>
+    </section>
+
+    <div class="app-shell" id="adminAppShell" style="display: none;">
+        <div class="container">
+            <header>
+                <div class="hero-badge">Admin workspace</div>
+                <h1>Student Admission Administration</h1>
+                <p>Create staff accounts, manage staff access, and work with the cloud database.</p>
+                <div class="offline-banner" id="adminOfflineBanner">Connected to the cloud school database.</div>
+
+                <div class="topbar-meta">
+                    <div class="user-pill">
+                        <span id="adminFullName">Admin</span>
+                        <small id="adminRole">admin</small>
+                    </div>
+                    <button class="btn btn-secondary btn-compact" onclick="adminLogout()">Logout</button>
+                </div>
+            </header>
+
+            <main class="admin-main">
+                <section class="dashboard-section">
+                    <div class="section-heading">
+                        <span class="section-kicker">Staff access</span>
+                        <h2>Create and Manage Staff Accounts</h2>
+                    </div>
+                    <div class="admin-summary-grid">
+                        <div class="dashboard-card">
+                            <span class="dashboard-label">Active Staff</span>
+                            <strong class="dashboard-value" id="activeUsersCard">0</strong>
+                        </div>
+                        <div class="dashboard-card">
+                            <span class="dashboard-label">Disabled Staff</span>
+                            <strong class="dashboard-value" id="disabledUsersCard">0</strong>
+                        </div>
+                        <div class="dashboard-card">
+                            <span class="dashboard-label">Student Records</span>
+                            <strong class="dashboard-value" id="adminStudentsCard">0</strong>
+                        </div>
+                    </div>
+                    <div class="dashboard-panel">
+                        <h3>Create staff login</h3>
+                        <form id="createStaffForm" class="staff-account-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="staffFullName">Staff full name</label>
+                                    <input id="staffFullName" type="text" maxlength="120" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="staffUsername">User ID</label>
+                                    <input id="staffUsername" type="text" autocomplete="username" placeholder="e.g. amit.thombare" minlength="3" maxlength="80" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="staffPassword">Temporary password</label>
+                                    <input id="staffPassword" type="password" autocomplete="new-password" minlength="8" maxlength="200" required>
+                                </div>
+                            </div>
+                            <div class="dashboard-actions">
+                                <button class="btn btn-primary" type="submit">Create Staff Account</button>
+                            </div>
+                            <p class="storage-note">Give the temporary password to the staff member privately. They can change it after signing in.</p>
+                            <p class="login-success" id="createStaffSuccess" style="display: none;"></p>
+                            <p class="login-error" id="createStaffError" style="display: none;"></p>
+                        </form>
+                    </div>
+                    <div class="section-heading staff-list-heading">
+                        <span class="section-kicker">Users</span>
+                        <h2>Staff Accounts</h2>
+                    </div>
+                    <div id="staffUsersList" class="approval-list">
+                        <p class="empty-state">No staff accounts yet.</p>
+                    </div>
+                </section>
+
+                <section class="records-section">
+                    <div class="section-heading">
+                        <span class="section-kicker">Settings</span>
+                        <h2>Admin Controls</h2>
+                    </div>
+                    <div class="bg-upload-section admin-controls-grid">
+                        <div class="admin-control-block">
+                            <label for="bgUpload">Set school background photo</label>
+                            <input type="file" id="bgUpload" accept="image/*">
+                            <div class="dashboard-actions">
+                                <button class="btn btn-secondary btn-compact" onclick="uploadBackground()">Save Background</button>
+                                <button class="btn btn-secondary btn-compact" onclick="resetBackground()">Reset</button>
+                            </div>
+                            <img id="bgPreview" class="bg-preview" style="display: none;" alt="Background preview">
+                        </div>
+
+                        <div class="admin-control-block">
+                            <label for="importRecordsInput">Import student backup JSON</label>
+                            <input type="file" id="importRecordsInput" accept=".json,application/json">
+                            <div class="dashboard-actions">
+                                <button class="btn btn-primary btn-compact" id="exportExcelBtn" onclick="exportExcelRecords()">Export Excel (.xlsx)</button>
+                                <button class="btn btn-secondary btn-compact" onclick="exportRecords()">Export JSON Backup</button>
+                                <button class="btn btn-danger btn-compact" onclick="deleteAllRecords()">Clear All Records</button>
+                            </div>
+                            <p class="storage-note">Student data is stored in the shared server database. Export a JSON backup regularly and keep the server data volume persistent.</p>
+                        </div>
+
+                        <div class="admin-control-block">
+                            <label for="reportSessionYear">Export year-wise history report</label>
+                            <select id="reportSessionYear">
+                                <option value="">Select Session Year</option>
+                            </select>
+                            <div class="dashboard-actions">
+                                <button class="btn btn-secondary btn-compact" onclick="exportHistoryReport()">Export History PDF</button>
+                                <button class="btn btn-primary btn-compact" id="exportHistoryExcelBtn" onclick="exportHistoryExcel()">Export History Excel (.xlsx)</button>
+                            </div>
+                            <p class="storage-note">Both reports include the full student history for the selected session year, total student count, and total amount collected.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="records-section">
+                    <div class="section-heading">
+                        <span class="section-kicker">Database</span>
+                        <h2>Student Records</h2>
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" id="adminSearchInput" placeholder="Search by student name, roll number, or parent name...">
+                    </div>
+                    <div id="recordsTableContainer" class="records-table-shell">
+                        <table class="records-table" id="adminRecordsTable">
+                            <thead>
+                                <tr>
+                                    <th>School Name</th>
+                                    <th>Student Name</th>
+                                    <th>Roll Number</th>
+                                    <th>Class</th>
+                                    <th>Parent Name</th>
+                                    <th>Session Year</th>
+                                    <th>Total Fee</th>
+                                    <th>Paid</th>
+                                    <th>Balance</th>
+                                    <th>Payment Mode</th>
+                                    <th>Date Added</th>
+                                    <th>Submitted By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminRecordsBody">
+                                <tr><td colspan="13" style="text-align: center; color: #7c8199;">No records found</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="admin.js?v=20260823-record-audit"></script>
+</body>
+</html>
