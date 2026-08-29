@@ -124,9 +124,6 @@ async function startApplication() {
 async function ensureBootstrapAdmin(pool, isMemoryDatabase) {
     await withTransaction(pool, async (client) => {
         if (!isMemoryDatabase) await client.query('SELECT pg_advisory_xact_lock($1)', [72420260823]);
-        const existingAdmin = await client.query("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
-        if (existingAdmin.rowCount) return;
-
         const username = normalizeEmail(process.env.ADMIN_EMAIL || '');
         const password = String(process.env.ADMIN_PASSWORD || '');
         const fullName = requireSingleLineText(process.env.ADMIN_NAME || 'School Administrator', 'Administrator name', 2, 120);
@@ -150,8 +147,8 @@ async function ensureBootstrapAdmin(pool, isMemoryDatabase) {
             `, [crypto.randomUUID(), fullName, username, passwordHash]);
             adminId = inserted.rows[0].id;
         }
-        await insertAuditEvent(client, { actorUserId: adminId, targetUserId: adminId, eventType: 'bootstrap_admin_created', newStatus: 'active' });
-        console.log(`Created bootstrap administrator: ${username}`);
+        await insertAuditEvent(client, { actorUserId: adminId, targetUserId: adminId, eventType: 'bootstrap_admin_configured', newStatus: 'active' });
+        console.log(`Configured bootstrap administrator: ${username}`);
     });
 }
 
