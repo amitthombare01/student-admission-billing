@@ -25,7 +25,7 @@ const TRUST_PROXY = process.env.TRUST_PROXY === '1';
 const TRUSTED_CLIENT_IP_HEADER = String(process.env.TRUSTED_CLIENT_IP_HEADER || '').trim().toLowerCase();
 const MAX_STANDARD_BODY_BYTES = 1024 * 1024;
 const MAX_LARGE_BODY_BYTES = parseInteger(process.env.MAX_JSON_MB, 12, 1, 50, 'MAX_JSON_MB') * 1024 * 1024;
-const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MIN_LENGTH = 4;
 const PASSWORD_MAX_LENGTH = 200;
 const MAX_EXCEL_EXPORT_ROWS = parseInteger(process.env.MAX_EXCEL_EXPORT_ROWS, 10000, 1, 50000, 'MAX_EXCEL_EXPORT_ROWS');
 const MAX_CONCURRENT_EXCEL_EXPORTS = parseInteger(process.env.MAX_CONCURRENT_EXCEL_EXPORTS, 2, 1, 10, 'MAX_CONCURRENT_EXCEL_EXPORTS');
@@ -127,8 +127,8 @@ async function ensureBootstrapAdmin(pool, isMemoryDatabase) {
         const username = normalizeEmail(process.env.ADMIN_EMAIL || '');
         const password = String(process.env.ADMIN_PASSWORD || '');
         const fullName = requireSingleLineText(process.env.ADMIN_NAME || 'School Administrator', 'Administrator name', 2, 120);
-        if (!isValidEmail(username) || password.length < 12 || password.length > PASSWORD_MAX_LENGTH) {
-            throw new Error('No administrator exists. Set ADMIN_EMAIL and an ADMIN_PASSWORD of at least 12 characters, then restart.');
+        if (!isValidEmail(username) || password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+            throw new Error(`No administrator exists. Set ADMIN_EMAIL and an ADMIN_PASSWORD of at least ${PASSWORD_MIN_LENGTH} characters, then restart.`);
         }
         const passwordHash = await hashPassword(password);
         const existingUser = await client.query('SELECT id FROM users WHERE LOWER(username) = LOWER($1)', [username]);
@@ -166,42 +166,41 @@ async function handleApiRequest(context, request, response, pathname) {
         return;
     }
 
-    if (method === 'POST' && ['/api/register', '/api/resend-verification', '/api/verify-email'].includes(pathname)) {
-        throw new HttpError(403, 'Staff accounts are created by an administrator. Ask your administrator for a user ID and temporary password.');
-    }
-
     if (method === 'POST' && pathname === '/api/register') {
         const clientAddress = getClientAddress(request);
         await consumeRateLimit(pool, 'registration_ip', clientAddress, 8, 60 * 60 * 1000);
         const body = await readJsonBody(request, MAX_STANDARD_BODY_BYTES);
         const fullName = requireSingleLineText(body.fullName, 'Full name', 2, 120);
-        const username = adminLogin ? normalizeEmail(body.username) : normalizeUserId(body.username);
+        const username = normalizeUserId(body.username);
         const password = validatePassword(body.password);
-        if (!isValidEmail(username)) throw new HttpError(400, 'Enter a valid email address.');
+        if (!isValidUserId(username)) {
+            throw new HttpError(400, 'User ID must be 3–80 characters and may contain lowercase letters, numbers, dots, hyphens, or underscores.');
+        }
         const passwordHash = await hashPassword(password);
         try {
             const user = await withTransaction(pool, async (client) => {
                 const inserted = await client.query(`
-                    INSERT INTO users (review_id, full_name, username, password_hash, role, status, created_at, status_changed_at)
-                    VALUES ($1, $2, $3, $4, 'staff', 'pending', NOW(), NOW()) RETURNING *
+                    INSERT INTO users (review_id, full_name, username, password_hash, role, status, created_at, status_changed_at, approved_at, email_verified_at)
+                    VALUES ($1, $2, $3, $4, 'staff', 'active', NOW(), NOW(), NOW(), NOW()) RETURNING *
                 `, [crypto.randomUUID(), fullName, username, passwordHash]);
-                const pendingUser = inserted.rows[0];
-                await queueEmailVerificationNotification(client, pendingUser, `email-verification:${pendingUser.id}`);
-                await insertAuditEvent(client, { targetUserId: pendingUser.id, eventType: 'registration_submitted', newStatus: 'pending', request });
-                return pendingUser;
+                const createdUser = inserted.rows[0];
+                await insertAuditEvent(client, { targetUserId: createdUser.id, eventType: 'staff_self_registered', newStatus: 'active', request });
+                return createdUser;
             });
-            outboxWorker.wake();
-            sendJson(response, 202, {
+            sendJson(response, 201, {
                 registered: true,
-                status: 'pending_email',
-                message: 'Registration submitted. Check your email and confirm the address before the administrator is notified.',
-                requestId: user.review_id
+                user: toPublicUser(user),
+                message: 'Registration successful. You can now log in with your user ID and password.'
             });
         } catch (error) {
-            if (isUniqueViolation(error)) throw new HttpError(409, 'An account with this email address already exists.');
+            if (isUniqueViolation(error)) throw new HttpError(409, 'This user ID is already registered. Choose a different user ID.');
             throw error;
         }
         return;
+    }
+
+    if (method === 'POST' && ['/api/resend-verification', '/api/verify-email'].includes(pathname)) {
+        throw new HttpError(404, 'Email verification is not used for this application. Register with a user ID and password instead.');
     }
 
     if (method === 'POST' && pathname === '/api/resend-verification') {
