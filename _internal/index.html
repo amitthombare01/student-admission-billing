@@ -20,7 +20,12 @@
         <div class="login-card">
             <div class="hero-badge">Secure access</div>
             <h1>School Admission Portal</h1>
-            <p>Use the staff user ID and password issued by your administrator.</p>
+            <p>Log in to manage admissions, or create a new staff account.</p>
+
+            <div class="auth-switch" id="authSwitch" role="tablist" aria-label="Account access options">
+                <button type="button" class="auth-tab active" id="showLoginBtn">Login</button>
+                <button type="button" class="auth-tab" id="showRegisterBtn">New User Registration</button>
+            </div>
 
             <form id="loginForm" class="login-form auth-form">
                 <div class="form-group">
@@ -35,6 +40,26 @@
                 <p class="login-note">Admin can also log in here, or use the separate <a href="admin.html">admin page</a>.</p>
                 <p class="login-success" id="loginSuccess" style="display: none;"></p>
                 <p class="login-error" id="loginError" style="display: none;"></p>
+            </form>
+
+            <form id="registerForm" class="login-form auth-form" style="display: none;">
+                <div class="form-group">
+                    <label for="registerFullName">Full Name</label>
+                    <input type="text" id="registerFullName" autocomplete="name" placeholder="Enter your full name" required minlength="2" maxlength="120">
+                </div>
+                <div class="form-group">
+                    <label for="registerUsername">User ID</label>
+                    <input type="text" id="registerUsername" autocomplete="username" placeholder="Example: amit.thombare" required minlength="3" maxlength="80" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,79}">
+                    <small>Use letters, numbers, dots, hyphens, or underscores.</small>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" autocomplete="new-password" placeholder="Minimum 4 characters" required minlength="4" maxlength="200">
+                </div>
+                <button type="submit" class="btn btn-primary">Create Account</button>
+                <p class="login-note">Your account is ready immediately after registration—no email confirmation is needed.</p>
+                <p class="login-success" id="registerSuccess" style="display: none;"></p>
+                <p class="login-error" id="registerError" role="alert" style="display: none;"></p>
             </form>
 
         </div>
@@ -271,11 +296,11 @@
                         </div>
                         <div class="form-group">
                             <label for="newPassword">New password</label>
-                            <input id="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="200" required>
+                            <input id="newPassword" type="password" autocomplete="new-password" minlength="4" maxlength="200" required>
                         </div>
                         <div class="form-group">
                             <label for="confirmNewPassword">Confirm new password</label>
-                            <input id="confirmNewPassword" type="password" autocomplete="new-password" minlength="8" maxlength="200" required>
+                            <input id="confirmNewPassword" type="password" autocomplete="new-password" minlength="4" maxlength="200" required>
                         </div>
                         <button class="btn btn-primary" type="submit">Save New Password</button>
                         <p class="login-success" id="passwordChangeSuccess" style="display: none;"></p>
